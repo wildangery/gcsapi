@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace gcsapi.Controllers
 {
@@ -26,6 +26,22 @@ namespace gcsapi.Controllers
             string Json = JsonConvert.SerializeObject(ds, Formatting.Indented);
 
             return Json;
+        }
+        public string PostTest([FromBody] object value)
+        {
+            try
+            {
+                Ruangan oWilayah = JsonConvert.DeserializeObject<Ruangan>(value.ToString());
+
+                string insertdata = $"INSERT INTO as_wilayah (nama_wilayah, tanggal) values ('{oWilayah.nama_wilayah}','{oWilayah.tanggal}');";
+                string a = Settings.ExsecuteSql(insertdata);
+                return a;
+                //return value;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         [HttpGet]

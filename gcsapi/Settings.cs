@@ -4,6 +4,8 @@ using System.Data.SqlClient;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace gcsapi
 {
@@ -25,6 +27,32 @@ namespace gcsapi
             cmd.ExecuteNonQuery();
             sqlCon.Close();
             return ds;
+        }
+
+        public static string ToMD5Hash(string source)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            using (MD5 md5 = MD5.Create())
+            {
+                byte[] md5HashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(source));
+
+                foreach (byte b in md5HashBytes)
+                {
+                    sb.Append(b.ToString("X2")); // print byte as Hexadecimal string
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        public static string ExecuteScalar(string sql)
+        {
+            sqlCon.Open();
+            SqlCommand cmd = new SqlCommand(sql, sqlCon);
+            string output = cmd.ExecuteScalar().ToString();
+            sqlCon.Close();
+            return output;
         }
 
         public static string ExsecuteSql2(string sql)
