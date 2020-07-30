@@ -15,6 +15,14 @@ namespace gcsapi
     {
         public string user { get; set; }
         public string password { get; set; }
+        
+    }
+
+    public class DataUser
+    {
+        public string nama { get; set; }
+        public string idnama { get; set; }
+        public string status { get; set; }
     }
 
     public class Wilayah

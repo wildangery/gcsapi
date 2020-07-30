@@ -46,6 +46,15 @@ namespace gcsapi
             return sb.ToString();
         }
 
+        public static SqlCommand ExNonQuery(string Sql)
+        {
+            sqlCon.Open();
+            SqlCommand sqlCmd1 = new SqlCommand(Sql, sqlCon);
+            sqlCmd1.ExecuteNonQuery();
+            sqlCon.Close();
+            return sqlCmd1;
+        }
+
         public static string ExecuteScalar(string sql)
         {
             sqlCon.Open();
