@@ -11,10 +11,9 @@ using System.Security.Cryptography;
 
 namespace gcsapi.Controllers
 {
-
     [ApiController]
     [Route("[controller]/[action]")]
-    public class Login : ControllerBase
+    public class Dashboard
     {
         string json;
         private static readonly string[] Summaries = new[]
@@ -23,36 +22,7 @@ namespace gcsapi.Controllers
         };
 
         [HttpPost]
-        public string PostTest([FromBody] object value)
-        {
-            try
-            {
-                Userdata oLogin = JsonConvert.DeserializeObject<Userdata>(value.ToString());
-                
-                string insertdata = $"SELECT id_profile, user_name FROM Profile WHERE user_name='" + oLogin.user + "' AND password ='" + Settings.ToMD5Hash(Settings.ToMD5Hash(oLogin.password)) + " '";
-                DataSet a = Settings.LoadDataSet(insertdata);
-
-                if(a.Tables[0].Rows.Count > 0)
-                {
-                    json = JsonConvert.SerializeObject(a, Formatting.None);
-                }
-                else
-                {
-                    //json = "{\r\n \"Table\":[\r\n {\r\n \"status\":\"gagal\"\r\n}\r\n ]\r\n}";
-                    json = JsonConvert.SerializeObject("{\"Table\":[{\"status\":\"gagal\"}]}", Formatting.Indented);
-                }
-                return json;
-                //return value;
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
-
-        }
-
-        [HttpPost]
-        public string UserLogin([FromBody] object value)
+        public string logbook([FromBody] object value)
         {
             List<DataUser> listEmployees = new List<DataUser>();
             try
@@ -93,13 +63,44 @@ namespace gcsapi.Controllers
 
 
         [HttpGet]
-        public string GetData()
+        public string LogNow()
         {
-            DataSet ds = Wilayah.GetWilayah();
-            string Json = JsonConvert.SerializeObject(ds, Formatting.Indented);
+            string now = DateTime.Now.ToString("yyyy/MM/dd");
+            string query = $"select id_logbook, unit, tipe_logbook, judul_logbook from tabel_logbook where tanggal = '{now}'";
+            DataSet ds = Settings.LoadDataSet(query);
+            string json = JsonConvert.SerializeObject(ds, Formatting.Indented);
 
-            return Json;
+            return json;
         }
 
+        [HttpGet]
+        public string LogOnProgress()
+        {
+            string now = DateTime.Now.ToString("yyyy/MM/dd");
+            string query = $"select top 3 id_logbook, judul_logbook from tabel_logbook where status = 'On Progress' order by id_logbook desc ";
+            DataSet ds = Settings.LoadDataSet(query);
+            string json = JsonConvert.SerializeObject(ds, Formatting.Indented);
+
+            return json;
+        }
+
+        [HttpGet]
+        public string shiftme()
+        {
+            var mulai = DateTime.Now.AddDays(-1).ToString("yyyy/MM/dd");
+            var akhir = DateTime.Now.AddDays(1).ToString("yyyy/MM/dd");
+
+            string query = $@"SELECT m.tanggal_shift, jadwal, STUFF((SELECT ',  ' + p.petugas 
+                      FROM shiftme s left join shiftme_petugas p on s.id_petugas = p.id_petugas
+					  WHERE m.jadwal = s.jadwal and m.tanggal_shift = s.tanggal_shift
+                      FOR XML PATH('')), 1, 1, '') [petugas] FROm shiftme m WHERE tanggal_shift >= '{mulai}' and tanggal_shift <= '{akhir}'
+					  group by tanggal_shift, jadwal
+                      order by tanggal_shift asc, jadwal asc ";
+
+            DataSet ds = Settings.LoadDataSet(query);
+            string json = JsonConvert.SerializeObject(ds, Formatting.Indented);
+
+            return json;
+        }
     }
 }
