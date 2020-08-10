@@ -16,6 +16,9 @@ namespace gcsapi.Controllers
     public class Dashboard
     {
         string json;
+        DataSet ds = new DataSet();
+        public static string ConnectionString = "Server=alta.telkom.space;Initial Catalog=GCS;User Id=gcs;Password=telk0mS4t!";
+        public static SqlConnection sqlCon = new SqlConnection(Settings.ConnectionString);
         private static readonly string[] Summaries = new[]
         {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -85,7 +88,7 @@ namespace gcsapi.Controllers
         }
 
         [HttpGet]
-        public string shiftme()
+        public string shiftme2()
         {
             var mulai = DateTime.Now.AddDays(-1).ToString("yyyy/MM/dd");
             var akhir = DateTime.Now.AddDays(1).ToString("yyyy/MM/dd");
@@ -100,6 +103,69 @@ namespace gcsapi.Controllers
             DataSet ds = Settings.LoadDataSet(query);
             string json = JsonConvert.SerializeObject(ds, Formatting.Indented);
 
+            return json;
+        }
+
+        [HttpGet]
+        public string shiftme()
+        {
+            List<DataShift> listEmployees = new List<DataShift>();
+            
+            var now = DateTime.Now.ToString("yyyy/MM/dd");
+            var akhir = DateTime.Now.AddDays(1).ToString("yyyy/MM/dd");
+
+            string query = $@"select tanggal_shift, jadwal from shiftme m join shiftme_petugas p on p.id_petugas=m.id_petugas 
+                            where m.tanggal_shift='2020/08/05' group by tanggal_shift, jadwal order by jadwal";
+            
+            
+            DataSet a = Settings.LoadDataSet(query);
+            SqlDataAdapter da;
+            
+            if (a.Tables[0].Rows.Count > 0)
+            {
+                for(int j = 0; j < a.Tables[0].Rows.Count; j++)
+                {
+                    ds.Clear();
+                    DataShift dataUser = new DataShift();
+
+                    dataUser.jadwal = a.Tables[0].Rows[j]["jadwal"].ToString();
+                    dataUser.tanggal = a.Tables[0].Rows[j]["tanggal_shift"].ToString();
+                    DateTime tgl = Convert.ToDateTime(a.Tables[0].Rows[j]["tanggal_shift"]);
+                    string mydate = tgl.ToString("yyyy/MM/dd");
+                    string jadwal = a.Tables[0].Rows[j]["jadwal"].ToString();
+
+                    string query2 = $@"select p.petugas, e.foto from shiftme s left join shiftme_petugas p on s.id_petugas = p.id_petugas
+                            full join Profile e on e.id_profile=p.id_profile
+					        WHERE s.jadwal = '{jadwal}' and s.tanggal_shift = '{mydate}'";
+
+                    SqlCommand cmd1 = new SqlCommand(query2, sqlCon);
+                    da = new SqlDataAdapter(cmd1);
+                    da.Fill(ds);
+                    sqlCon.Open();
+                    cmd1.ExecuteNonQuery();
+                    sqlCon.Close();
+                    List<Petugas> listEmployees2 = new List<Petugas>();
+
+                    for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                    {
+                        Petugas dataUser2 = new Petugas();
+                        dataUser2.nama = ds.Tables[0].Rows[i]["petugas"].ToString();
+                        dataUser2.foto = ds.Tables[0].Rows[i]["foto"].ToString().Replace("~", "gcs.telkom.space");
+                        listEmployees2.Add(dataUser2);
+
+                        dataUser.petugas = listEmployees2;
+                    }
+
+                    
+                    listEmployees.Add(dataUser);
+                }
+                
+                /*var result = new                                                      //Menambahkan object didepan
+                {
+                    user = listEmployees
+                };*/
+                json = JsonConvert.SerializeObject(listEmployees, Formatting.Indented);
+            }
             return json;
         }
     }

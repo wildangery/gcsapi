@@ -12,9 +12,6 @@ namespace gcsapi
     public class Settings
     {
         public static string ConnectionString = "Server=alta.telkom.space;Initial Catalog=GCS;User Id=gcs;Password=telk0mS4t!";
-
-
-
         public static SqlConnection sqlCon = new SqlConnection(Settings.ConnectionString);
 
         public static DataSet LoadDataSet(string Sql)

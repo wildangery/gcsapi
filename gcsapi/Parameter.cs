@@ -25,6 +25,19 @@ namespace gcsapi
         public string status { get; set; }
     }
 
+    public class DataShift
+    {
+        public string tanggal { get; set; }
+        public string jadwal { get; set; }
+
+        public List<Petugas> petugas;
+    }
+    public class Petugas
+    {
+        public string nama { get; set; }
+        public string foto { get; set; }
+    }
+
     public class Wilayah
     {
         public string nama_wilayah { get; set; }
